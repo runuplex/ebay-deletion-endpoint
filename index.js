@@ -5,20 +5,34 @@ const app = express();
 
 app.use(express.json());
 
-console.log("🚨 ACTIVE EBAY SERVER RUNNING");
+// Startup confirmation
+console.log("🚨 EBAY DELETION SERVICE ACTIVE");
 
-// ROOT ROUTE
+// Health check
 app.get('/', (req, res) => {
   res.send('Server is running');
 });
 
-// EBAY ROUTE (MUST COME BEFORE catch-all)
-app.get('/ebay/deletion', (req, res) => {
-  console.log("🔥 EBAY ROUTE HIT", req.query);
+// eBay deletion / CRC endpoint (supports GET + POST)
+app.all('/ebay/deletion', (req, res) => {
+  console.log("🔥 EBAY ROUTE HIT", {
+    method: req.method,
+    query: req.query,
+    body: req.body
+  });
 
-  const challengeCode = req.query.challenge_code;
+  const challengeCode =
+    req.query.challenge_code || req.body.challenge_code;
+
+  if (!challengeCode) {
+    return res.status(400).send('Missing challenge_code');
+  }
 
   const verificationToken = process.env.EBAY_VERIFICATION_TOKEN;
+
+  if (!verificationToken) {
+    return res.status(500).send('Missing EBAY_VERIFICATION_TOKEN');
+  }
 
   const endpoint =
     'https://ebay-deletion-endpoint-cml9.onrender.com/ebay/deletion';
@@ -28,19 +42,14 @@ app.get('/ebay/deletion', (req, res) => {
     .update(challengeCode + verificationToken + endpoint)
     .digest('hex');
 
-  res.json({
+  return res.status(200).json({
     challengeResponse: hash
   });
 });
 
-// CATCH-ALL (must be LAST)
-app.use((req, res) => {
-  console.log("🔥 UNKNOWN ROUTE HIT:", req.method, req.url);
-  res.status(404).send("Not found");
-});
-
+// Start server (required for Render)
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log("Server running on port", PORT);
+  console.log(`Server running on port ${PORT}`);
 });
