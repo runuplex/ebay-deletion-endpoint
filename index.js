@@ -1,4 +1,3 @@
-console.log("🚨 THIS IS THE ACTIVE SERVICE v2");
 const express = require('express');
 const crypto = require('crypto');
 
@@ -6,21 +5,17 @@ const app = express();
 
 app.use(express.json());
 
-// Health check
+// Startup check (helps confirm correct deploy)
+console.log("🚨 ACTIVE EBAY DELETION SERVICE RUNNING");
+
+// Health check route
 app.get('/', (req, res) => {
   res.status(200).send('Server is running');
 });
 
-// eBay verification endpoint
+// eBay deletion / CRC verification endpoint
 app.get('/ebay/deletion', (req, res) => {
-  console.log("🔥 REAL REQUEST RECEIVED", req.query);
-
-  res.json({
-    ok: true,
-    time: Date.now(),
-    received: req.query
-  });
-});
+  const challengeCode = req.query.challenge_code;
 
   if (!challengeCode) {
     return res.status(400).send('Missing challenge_code');
@@ -45,7 +40,7 @@ app.get('/ebay/deletion', (req, res) => {
   });
 });
 
-// Start server
+// Start server (REQUIRED for Render)
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
