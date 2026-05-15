@@ -1,3 +1,10 @@
+const express = require('express');
+const crypto = require('crypto');
+
+const app = express();
+
+app.use(express.json());
+
 app.post('/ebay/deletion', (req, res) => {
   const challengeCode = req.body.challenge_code;
 
@@ -7,8 +14,12 @@ app.post('/ebay/deletion', (req, res) => {
 
   const verificationToken = process.env.EBAY_VERIFICATION_TOKEN;
 
+  if (!verificationToken) {
+    return res.status(500).send('Missing verification token');
+  }
+
   const endpoint =
-    'https://ebay-deletion-endpoint-cml9.onrender.com/ebay/deletion'; // <-- your real Render URL
+    'https://ebay-deletion-endpoint-cml9.onrender.com/ebay/deletion';
 
   const hash = crypto
     .createHash('sha256')
