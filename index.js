@@ -1,3 +1,21 @@
+const express = require('express');
+const crypto = require('crypto');
+
+const app = express();
+
+app.use(express.json());
+
+/**
+ * Health check (Render-friendly)
+ */
+app.get('/', (req, res) => {
+  res.status(200).send('Server is running');
+});
+
+/**
+ * eBay Account Deletion / Notification Verification Endpoint
+ * MUST be GET
+ */
 app.get('/ebay/deletion', (req, res) => {
   const challengeCode = req.query.challenge_code;
 
@@ -21,4 +39,13 @@ app.get('/ebay/deletion', (req, res) => {
   return res.status(200).json({
     challengeResponse: hash
   });
+});
+
+/**
+ * Start server (required for Render)
+ */
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
