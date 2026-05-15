@@ -5,17 +5,12 @@ const app = express();
 
 app.use(express.json());
 
-/**
- * Health check (Render-friendly)
- */
+// Simple health check (optional but useful for Render)
 app.get('/', (req, res) => {
   res.status(200).send('Server is running');
 });
 
-/**
- * eBay Account Deletion / Notification Verification Endpoint
- * MUST be GET
- */
+// eBay Account Deletion / CRC endpoint
 app.get('/ebay/deletion', (req, res) => {
   const challengeCode = req.query.challenge_code;
 
@@ -29,7 +24,8 @@ app.get('/ebay/deletion', (req, res) => {
     return res.status(500).send('Missing EBAY_VERIFICATION_TOKEN');
   }
 
-  const endpoint = 'https://ebay-deletion-endpoint-cml9.onrender.com/ebay/deletion';
+  // IMPORTANT: must match EXACT public URL eBay calls
+  const endpoint = `${req.protocol}://${req.get('host')}${req.originalUrl.split('?')[0]}`;
 
   const hash = crypto
     .createHash('sha256')
@@ -41,9 +37,7 @@ app.get('/ebay/deletion', (req, res) => {
   });
 });
 
-/**
- * Start server (required for Render)
- */
+// Start server (required for Render)
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
