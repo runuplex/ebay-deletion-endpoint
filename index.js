@@ -1,12 +1,5 @@
-const express = require('express');
-const crypto = require('crypto');
-
-const app = express();
-
-app.use(express.json());
-
-app.post('/ebay/deletion', (req, res) => {
-  const challengeCode = req.body.challenge_code;
+app.get('/ebay/deletion', (req, res) => {
+  const challengeCode = req.query.challenge_code;
 
   if (!challengeCode) {
     return res.status(400).send('Missing challenge_code');
@@ -30,8 +23,3 @@ app.post('/ebay/deletion', (req, res) => {
     challengeResponse: hash
   });
 });
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  });
