@@ -1,3 +1,16 @@
+const express = require('express');
+const crypto = require('crypto');
+
+const app = express();
+
+app.use(express.json());
+
+// Health check (optional but useful for Render)
+app.get('/', (req, res) => {
+  res.status(200).send('Server is running');
+});
+
+// eBay Account Deletion Notification / CRC endpoint
 app.get('/ebay/deletion', (req, res) => {
   const challengeCode = req.query.challenge_code;
 
@@ -8,11 +21,10 @@ app.get('/ebay/deletion', (req, res) => {
   const verificationToken = process.env.EBAY_VERIFICATION_TOKEN;
 
   if (!verificationToken) {
-    return res.status(500).send('Missing verification token');
+    return res.status(500).send('Missing EBAY_VERIFICATION_TOKEN');
   }
 
-  const endpoint =
-    'https://ebay-deletion-endpoint-cml9.onrender.com/ebay/deletion';
+  const endpoint = 'https://ebay-deletion-endpoint-cml9.onrender.com/ebay/deletion';
 
   const hash = crypto
     .createHash('sha256')
@@ -22,4 +34,11 @@ app.get('/ebay/deletion', (req, res) => {
   return res.status(200).json({
     challengeResponse: hash
   });
+});
+
+// Start server (IMPORTANT for Render)
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
