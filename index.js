@@ -1,3 +1,16 @@
+const express = require('express');
+const crypto = require('crypto');
+
+const app = express();
+
+app.use(express.json());
+
+// Health check
+app.get('/', (req, res) => {
+  res.status(200).send('Server is running');
+});
+
+// eBay CRC endpoint
 app.get('/ebay/deletion', (req, res) => {
   const challengeCode = req.query.challenge_code;
 
@@ -13,18 +26,19 @@ app.get('/ebay/deletion', (req, res) => {
 
   const endpoint = "https://ebay-deletion-endpoint-cml9.onrender.com/ebay/deletion";
 
-  console.log("CHALLENGE:", challengeCode);
-  console.log("TOKEN EXISTS:", !!verificationToken);
-  console.log("ENDPOINT:", endpoint);
-
   const hash = crypto
     .createHash('sha256')
     .update(challengeCode + verificationToken + endpoint)
     .digest('hex');
 
-  console.log("HASH:", hash);
-
   return res.status(200).json({
     challengeResponse: hash
   });
+});
+
+// Start server
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
