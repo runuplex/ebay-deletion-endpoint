@@ -5,49 +5,54 @@ const app = express();
 
 app.use(express.json());
 
-// Startup confirmation
-console.log("🚨 EBAY DELETION SERVICE ACTIVE");
+// Startup log
+console.log("🚨 EBAY DELETION SERVICE RUNNING");
 
 // Health check
 app.get('/', (req, res) => {
   res.send('Server is running');
 });
 
-// eBay deletion / CRC endpoint (supports GET + POST)
+// eBay endpoint (handles BOTH verification + notifications)
 app.all('/ebay/deletion', (req, res) => {
-  console.log("🔥 EBAY ROUTE HIT", {
-    method: req.method,
-    query: req.query,
-    body: req.body
-  });
+  const challengeCode = req.query.challenge_code;
 
-  const challengeCode =
-    req.query.challenge_code || req.body.challenge_code;
+  // =========================
+  // 1. CRC VERIFICATION FLOW
+  // =========================
+  if (challengeCode) {
+    console.log("🔥 CRC VERIFICATION REQUEST RECEIVED");
 
-  if (!challengeCode) {
-    return res.status(400).send('Missing challenge_code');
+    const verificationToken = process.env.EBAY_VERIFICATION_TOKEN;
+
+    if (!verificationToken) {
+      console.log("❌ Missing EBAY_VERIFICATION_TOKEN");
+      return res.status(500).send('Missing EBAY_VERIFICATION_TOKEN');
+    }
+
+    const endpoint =
+      'https://ebay-deletion-endpoint-cml9.onrender.com/ebay/deletion';
+
+    const hash = crypto
+      .createHash('sha256')
+      .update(challengeCode + verificationToken + endpoint)
+      .digest('hex');
+
+    return res.json({
+      challengeResponse: hash
+    });
   }
 
-  const verificationToken = process.env.EBAY_VERIFICATION_TOKEN;
+  // =========================
+  // 2. EVENT NOTIFICATION FLOW
+  // =========================
+  console.log("📩 EBAY EVENT RECEIVED:");
+  console.log(JSON.stringify(req.body, null, 2));
 
-  if (!verificationToken) {
-    return res.status(500).send('Missing EBAY_VERIFICATION_TOKEN');
-  }
-
-  const endpoint =
-    'https://ebay-deletion-endpoint-cml9.onrender.com/ebay/deletion';
-
-  const hash = crypto
-    .createHash('sha256')
-    .update(challengeCode + verificationToken + endpoint)
-    .digest('hex');
-
-  return res.status(200).json({
-    challengeResponse: hash
-  });
+  return res.status(200).send('OK');
 });
 
-// Start server (required for Render)
+// Start server
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
