@@ -1,3 +1,4 @@
+console.log("🚨 THIS IS THE ACTIVE SERVICE v2");
 const express = require('express');
 const crypto = require('crypto');
 
