@@ -13,7 +13,14 @@ app.get('/', (req, res) => {
 
 // eBay verification endpoint
 app.get('/ebay/deletion', (req, res) => {
-  const challengeCode = req.query.challenge_code;
+  console.log("🔥 REAL REQUEST RECEIVED", req.query);
+
+  res.json({
+    ok: true,
+    time: Date.now(),
+    received: req.query
+  });
+});
 
   if (!challengeCode) {
     return res.status(400).send('Missing challenge_code');
